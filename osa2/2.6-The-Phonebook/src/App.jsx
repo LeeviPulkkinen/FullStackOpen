@@ -27,7 +27,7 @@ const PersonForm = ({
         <div>
           number:{" "}
           <input
-            type="number"
+            type="text"
             value={newNumber}
             onChange={handleNumberChange}
           />
@@ -113,7 +113,7 @@ const App = () => {
 
       numbersService
         .update(existing_person.id, updated_person)
-        .then((response) => {
+        .then(() => {
           setPersons(
             persons.map((person) =>
               person.id !== existing_person.id ? person : updated_person
@@ -125,8 +125,8 @@ const App = () => {
             setNotificationText("");
           }, 3000);
         })
-        .catch(() => {
-          setErrorText(`Person ${updated_person.name} not found`);
+        .catch((error) => {
+          setErrorText(error.response.data.error);
           setTimeout(() => {
             setErrorText("");
           }, 3000);
@@ -137,14 +137,22 @@ const App = () => {
         number: newNumber,
       };
 
-      numbersService.create(new_person).then((person) => {
-        setPersons(persons.concat(person));
+      numbersService
+        .create(new_person)
+        .then((person) => {
+          setPersons(persons.concat(person));
 
-        setNotificationText(`Added ${person.name}`);
-        setTimeout(() => {
-          setNotificationText("");
-        }, 3000);
-      });
+          setNotificationText(`Added ${person.name}`);
+          setTimeout(() => {
+            setNotificationText("");
+          }, 3000);
+        })
+        .catch((error) => {
+          setErrorText(error.response.data.error);
+          setTimeout(() => {
+            setErrorText("");
+          }, 3000);
+        });
     }
     setNewName("");
     setNewNumber("");
@@ -157,14 +165,14 @@ const App = () => {
 
     numbersService
       .remove(person.id)
-      .then((resp) => {
+      .then(() => {
         setPersons(persons.filter((per) => per.id !== person.id));
       })
       .catch(() => {
         setErrorText(`Person ${person.name} not found`);
-          setTimeout(() => {
-            setErrorText("");
-          }, 3000);
+        setTimeout(() => {
+          setErrorText("");
+        }, 3000);
       });
   };
 
