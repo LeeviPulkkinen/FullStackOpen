@@ -7,6 +7,11 @@ notesRouter.get('/', async (request, response) => {
     response.json(blogs)
 })
 
+notesRouter.get('/:id', async (request, response) => {
+    const blogs = await Blog.findById(request.params.id).populate("user", { username: 1, name: 1 })
+    response.json(blogs)
+})
+
 notesRouter.post('/', middleware.userExtractor, async (request, response) => {
     const user = request.user
 
