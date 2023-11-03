@@ -1,67 +1,63 @@
-const anecdotesAtStart = [
-  'If it hurts, do it more often',
-  'Adding manpower to a late software project makes it later!',
-  'The first 90 percent of the code accounts for the first 90 percent of the development time...The remaining 10 percent of the code accounts for the other 90 percent of the development time.',
-  'Any fool can write code that a computer can understand. Good programmers write code that humans can understand.',
-  'Premature optimization is the root of all evil.',
-  'Debugging is twice as hard as writing the code in the first place. Therefore, if you write the code as cleverly as possible, you are, by definition, not smart enough to debug it.'
-]
+import { createSlice } from '@reduxjs/toolkit'
+import anecdoteService from '../services/anecdoteService'
 
-const getId = () => (100000 * Math.random()).toFixed(0)
+const reducer = createSlice({
+  name: 'anecdotes',
+  initialState: [],
 
-const asObject = (anecdote) => {
-  return {
-    content: anecdote,
-    id: getId(),
-    votes: 0
-  }
-}
+  reducers: {
+    like(state, action) {
+      const id = action.payload
 
-const initialState = anecdotesAtStart.map(asObject)
-
-const reducer = (state = initialState, action) => {
-  switch (action.type) {
-    case 'LIKE': {
-      const id = action.payload.id
-
-      const anecdoteToChange = state.find(n => n.id === id)
+      const anecdoteToChange = state.find(n => Number(n.id) === Number(id))
       const changedAnecdote = {
         ...anecdoteToChange,
         votes: anecdoteToChange.votes + 1
       }
 
       return state.map(anecdote => anecdote.id !== id ? anecdote : changedAnecdote)
-    }
-
-    case 'ADD': {
+    },
+    add(state, action) {
       const content = action.payload.content
-
+      const id = action.payload.id
       const newAnecdote = {
         content: content,
-        id: getId(),
+        id: id,
         votes: 0
       }
 
       return [ ...state, newAnecdote ]
+    },
+    setAnecdotes(state, action) {
+      return action.payload
     }
+  }
+})
 
-    default:
-      return state
+export const { like, add, setAnecdotes } = reducer.actions
+
+export const initializeAnecdotes = () => {
+  return async dispatch => {
+    const anecdotes = await anecdoteService.getAll()
+    dispatch(setAnecdotes(anecdotes))
   }
 }
 
-export const vote = (id) => {
-  return {
-    type: 'LIKE',
-    payload: { id: id }
+export const createAnecdote = ({id, content}, addedNotification) => {
+  return async dispatch => {
+    const newAnecdote = await anecdoteService.createNew({id, content})
+    dispatch(add(newAnecdote))
+    addedNotification(newAnecdote.content)
   }
 }
 
-export const add = (content) => {
-  return {
-    type: 'ADD',
-    payload: { content: content }
+export const voteAnecdote = (anecdote, votedNotification) => {
+  return async dispatch => {
+    const modifiedAnecdote = await anecdoteService.vote(anecdote)
+    dispatch(like(modifiedAnecdote.id))
+    votedNotification(modifiedAnecdote.content)
   }
 }
 
-export default reducer
+
+export default reducer.reducer
