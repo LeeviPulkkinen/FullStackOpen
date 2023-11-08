@@ -1,0 +1,10 @@
+POST http://localhost:3003/api/blogs HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Ik1heC1Gb3J3YXJkcyIsImlkIjoiNjUzMTkwNmFlMGY0YzkyZTk1YjNiMDZjIiwiaWF0IjoxNjk3NzUxMjMxfQ.QoLhE1BCZspx52sRA6o2pRTRgHEHX655xUg_pa41quc
+
+{
+    "title": "new",
+    "author": "jake",
+    "url": "testing/site.com",
+    "likes": "2"
+}   
