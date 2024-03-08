@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { Button } from "react-bootstrap";
 
 const BlogPage = ({ blog, user, handleLike, handleRemove }) => {
   const navigate = useNavigate();
@@ -13,19 +14,19 @@ const BlogPage = ({ blog, user, handleLike, handleRemove }) => {
       <br />
       <a href={`${blog.url}`}>{blog.url}</a>
       <br />
-      Likes {blog.likes} <button onClick={() => handleLike(blog)}>Like</button>
+      Likes {blog.likes} <Button onClick={() => handleLike(blog)}>Like</Button>
       <br />
       {blog.user.name}
       <br />
       {user.name === blog.user.name && (
-        <button
+        <Button
           onClick={() => {
             handleRemove(blog);
             navigate("/");
           }}
         >
           Remove
-        </button>
+        </Button>
       )}
     </div>
   );

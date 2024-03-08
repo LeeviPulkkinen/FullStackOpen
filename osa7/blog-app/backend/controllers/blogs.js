@@ -1,18 +1,18 @@
-const notesRouter = require('express').Router()
+const blogsRouter = require('express').Router()
 const Blog = require("../models/blog")
 const middleware = require("../utils/middleware")
 
-notesRouter.get('/', async (request, response) => {
+blogsRouter.get('/', async (request, response) => {
     const blogs = await Blog.find({}).populate("user", { username: 1, name: 1 })
     response.json(blogs)
 })
 
-notesRouter.get('/:id', async (request, response) => {
+blogsRouter.get('/:id', async (request, response) => {
     const blogs = await Blog.findById(request.params.id).populate("user", { username: 1, name: 1 })
     response.json(blogs)
 })
 
-notesRouter.post('/', middleware.userExtractor, async (request, response) => {
+blogsRouter.post('/', middleware.userExtractor, async (request, response) => {
     const user = request.user
 
     request.body.user = user.id
@@ -25,7 +25,7 @@ notesRouter.post('/', middleware.userExtractor, async (request, response) => {
     response.status(201).json(blog)
 })
 
-notesRouter.delete('/:id', middleware.userExtractor, async (request, response) => {
+blogsRouter.delete('/:id', middleware.userExtractor, async (request, response) => {
     const user = request.user
 
     const blog = await Blog.findById(request.params.id)
@@ -42,7 +42,7 @@ notesRouter.delete('/:id', middleware.userExtractor, async (request, response) =
     }
 })
 
-notesRouter.put('/:id', async (request, response) => {
+blogsRouter.put('/:id', async (request, response) => {
     const body = request.body
 
     const blog = {
@@ -57,4 +57,12 @@ notesRouter.put('/:id', async (request, response) => {
 
 })
 
-module.exports = notesRouter
+blogsRouter.post('/:id/like', async (request, response) => {
+    const blog = await Blog.findById(request.params.id)
+    blog.likes++
+    const res = await Blog.findByIdAndUpdate(request.params.id, blog, { new: true })
+
+    response.json(res)
+})
+
+module.exports = blogsRouter

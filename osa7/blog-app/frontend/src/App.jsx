@@ -1,16 +1,14 @@
 import { useState, useEffect, useRef } from "react";
-import Blog from "./components/Blog";
+import NavigationBar from "./components/NavigationBar";
+import BlogList from "./components/BlogList";
 import Login from "./components/Login";
 import blogService from "./services/blogs";
 import usersService from "./services/users";
-import BlogForm from "./components/BlogForm";
-import Togglable from "./components/Togglable";
 import Notificiation from "./components/notification";
 import Users from "./components/Users";
 import UserPage from "./components/UserPage";
 import BlogPage from "./components/BlogPage";
-import { useMatch, Routes, Route, Link } from "react-router-dom";
-import { Table, Navbar, Nav } from "react-bootstrap";
+import { useMatch, Routes, Route } from "react-router-dom";
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
@@ -48,6 +46,14 @@ const App = () => {
     }
   }, []);
 
+  const createMessage = (message, duration = 4000) => {
+    setMessage(message);
+
+    setTimeout(() => {
+      setMessage(null);
+    }, duration);
+  };
+
   const handleLike = async (blog) => {
     try {
       await blogService.like(blog.id);
@@ -56,11 +62,7 @@ const App = () => {
 
       setBlogs(blogs.map((b) => (b.id === blog.id ? new_blog : b)));
     } catch (e) {
-      setMessage("Error liking blog");
-
-      setTimeout(() => {
-        setMessage(null);
-      }, 4000);
+      createMessage("Error liking blog");
     }
   };
 
@@ -72,12 +74,9 @@ const App = () => {
       await blogService.remove(blog.id);
 
       setBlogs(blogs.filter((b) => b.id !== blog.id));
+      createMessage("Blog removed");
     } catch (e) {
-      setMessage("Error removing blog");
-
-      setTimeout(() => {
-        setMessage(null);
-      }, 4000);
+      createMessage("Error removing blog");
     }
   };
 
@@ -93,109 +92,61 @@ const App = () => {
 
       setBlogs(blogs);
 
-      setMessage(`New blog ${new_blog.title} by ${new_blog.author}`);
+      createMessage(
+        `New blog ${new_blog.title} by ${new_blog.author} created!`
+      );
 
       blogFormRef.current.toggleVisibility();
-
-      setTimeout(() => {
-        setMessage("");
-      }, 4000);
     } catch (e) {
-      setMessage("Error creating blog");
-
-      setTimeout(() => {
-        setMessage("");
-      }, 4000);
+      createMessage("Error creating blog");
     }
+  };
+
+  const logout = () => {
+    window.localStorage.removeItem("loggedUser");
+    setUser(null);
   };
 
   const blogFormRef = useRef();
 
   if (user === null) {
     return (
-      <div>
+      <div className="container">
         <Login setUser={setUser} />
       </div>
     );
   }
 
-  const padding = { padding: 5 };
-
   return (
     <div className="container">
-      <Navbar collapseOnSelect expand="lg" bg="dark" variant="dark">
-        <Navbar.Toggle aria-controls="responsive-navbar-nav" />
-        <Navbar.Collapse id="responsive-navbar-nav">
-          <Nav className="mr-auto">
-            <Nav.Link href="#" as="span">
-              <Link style={padding} to="/">
-                blogs
-              </Link>
-            </Nav.Link>
-            <Nav.Link href="#" as="span">
-              <Link style={padding} to="/users">
-                users
-              </Link>
-            </Nav.Link>
-            <Nav.Link href="#" as="span">
-              {user.name} logged in
-              <Link style={padding} to="/login">
-                <button
-                  onClick={() => {
-                    window.localStorage.removeItem("loggedUser");
-                    setUser(null);
-                  }}
-                >
-                  Logout
-                </button>
-              </Link>
-            </Nav.Link>
-          </Nav>
-        </Navbar.Collapse>
-      </Navbar>
-      <div>
-        <h2>blogs</h2>
-
-        <Notificiation message={message} />
-
-        <Routes>
-          <Route path="/login" element={<Login setUser={setUser} />} />
-          <Route
-            path="/"
-            element={
-              <>
-                <Togglable buttonLabel="New Blog" ref={blogFormRef}>
-                  <BlogForm createBlog={createBlog} />
-                </Togglable>
-
-                <br />
-                <Table striped>
-                  <tbody>
-                    {blogs
-                      .sort((a, b) => a.likes < b.likes)
-                      .map((blog) => (
-                        <Blog key={blog.id} blog={blog} />
-                      ))}
-                  </tbody>
-                </Table>
-              </>
-            }
-          />
-          <Route
-            path="/blogs/:id"
-            element={
-              <BlogPage
-                blog={selectedBlog}
-                user={user}
-                handleLike={handleLike}
-                handleRemove={handleRemove}
-              />
-            }
-          />
-          <Route path="/users" element={<Users users={users} />} />
-          <Route path="/users/:id" element={<UserPage user={selectedUser} />} />
-        </Routes>
-      </div>
+      <NavigationBar user={user} handleClick={logout} />
+      <Notificiation message={message} />
+      <Routes>
+        <Route path="/login" element={<Login setUser={setUser} />} />
+        <Route
+          path="/"
+          element={
+            <BlogList
+              blogs={blogs}
+              handleCreateBlog={createBlog}
+              blogFormRef={blogFormRef}
+            />
+          }
+        />
+        <Route
+          path="/blogs/:id"
+          element={
+            <BlogPage
+              blog={selectedBlog}
+              user={user}
+              handleLike={handleLike}
+              handleRemove={handleRemove}
+            />
+          }
+        />
+        <Route path="/users" element={<Users users={users} />} />
+        <Route path="/users/:id" element={<UserPage user={selectedUser} />} />
+      </Routes>
     </div>
   );
 };
